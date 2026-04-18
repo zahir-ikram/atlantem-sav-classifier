@@ -1,0 +1,24 @@
+# SAV Claims Analyzer — Configuration par défaut
+# Les variables d'environnement ont priorité sur ce fichier.
+#
+# Variables d'environnement correspondantes :
+#   AWS_REGION, BEDROCK_MODEL_ID, ATTACHMENTS_DIR,
+#   OUTPUT_DIR, LOG_DIR, BATCH_SIZE
+
+# Région AWS utilisée pour les appels à AWS Bedrock
+aws_region: eu-west-1
+
+# Identifiant du modèle AWS Bedrock (Claude claude-sonnet-4-6)
+bedrock_model_id: us.anthropic.claude-sonnet-4-6
+
+# Répertoire contenant les pièces jointes (JPG, PDF)
+attachments_dir: ./attachments
+
+# Répertoire de sortie pour les CSV enrichis
+output_dir: ./output
+
+# Répertoire de journalisation
+log_dir: ./logs
+
+# Nombre maximum de réclamations par lot
+batch_size: 100

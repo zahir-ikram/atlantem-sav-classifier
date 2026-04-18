@@ -1,0 +1,2 @@
+2026-04-18 13:04:04,799 [INFO] __main__ — Journal initialisé : logs\sav_analyzer_20260418_130404.log
+2026-04-18 13:04:04,800 [INFO] __main__ — Démarrage — semaines=['13'], modèle=us.anthropic.claude-sonnet-4-6, région=eu-west-1

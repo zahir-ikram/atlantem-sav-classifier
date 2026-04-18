@@ -1,0 +1,5 @@
+2026-04-18 13:30:54,946 [INFO] __main__ — Journal initialisé : logs\sav_analyzer_20260418_133054.log
+2026-04-18 13:30:54,946 [INFO] __main__ — Démarrage — semaines=['13'], modèle=us.anthropic.claude-sonnet-4-6, région=eu-west-1
+2026-04-18 13:30:55,853 [INFO] botocore.credentials — Found credentials in environment variables.
+2026-04-18 13:30:55,964 [INFO] src.classifier — SAVClassifier initialisé — modèle : us.anthropic.claude-sonnet-4-6, région : eu-west-1
+2026-04-18 13:30:55,964 [INFO] src.data_loader — Chargement week13 : Reclamations_Digit_20260323-20260327.xlsx

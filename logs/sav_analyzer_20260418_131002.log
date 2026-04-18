@@ -1,0 +1,28 @@
+2026-04-18 13:10:02,728 [INFO] __main__ — Journal initialisé : logs\sav_analyzer_20260418_131002.log
+2026-04-18 13:10:02,729 [INFO] __main__ — Démarrage — semaines=['13'], modèle=us.anthropic.claude-sonnet-4-6, région=eu-west-1
+2026-04-18 13:10:04,568 [INFO] src.classifier — SAVClassifier initialisé — modèle : us.anthropic.claude-sonnet-4-6, région : eu-west-1
+2026-04-18 13:10:04,568 [INFO] src.data_loader — Chargement week13 : Reclamations_Digit_20260323-20260327.xlsx
+2026-04-18 13:10:04,997 [INFO] src.data_loader — Week13 : 399 réclamations chargées
+2026-04-18 13:10:04,998 [INFO] __main__ — Week13 : 399 réclamations chargées
+2026-04-18 13:10:04,999 [INFO] __main__ — Total : 399 réclamations à classifier
+2026-04-18 13:10:05,002 [INFO] __main__ — Lot 1/4 — 100 réclamations
+2026-04-18 13:10:05,005 [WARNING] src.classifier — Tentative 1/3 échouée pour R20260323001#SAVF-47540-260019 (Unable to locate credentials). Retry dans 2s.
+2026-04-18 13:10:07,006 [WARNING] src.classifier — Tentative 2/3 échouée pour R20260323001#SAVF-47540-260019 (Unable to locate credentials). Retry dans 4s.
+2026-04-18 13:10:11,008 [ERROR] src.classifier — Toutes les tentatives épuisées pour R20260323001#SAVF-47540-260019 : Unable to locate credentials
+2026-04-18 13:10:11,093 [WARNING] src.classifier — Tentative 1/3 échouée pour R20260323002#SAVF-47517-260001 (Unable to locate credentials). Retry dans 2s.
+2026-04-18 13:10:13,125 [WARNING] src.classifier — Tentative 2/3 échouée pour R20260323002#SAVF-47517-260001 (Unable to locate credentials). Retry dans 4s.
+2026-04-18 13:10:17,161 [ERROR] src.classifier — Toutes les tentatives épuisées pour R20260323002#SAVF-47517-260001 : Unable to locate credentials
+2026-04-18 13:10:17,163 [WARNING] src.classifier — Tentative 1/3 échouée pour R20260323003#SAVF-57724-260001 (Unable to locate credentials). Retry dans 2s.
+2026-04-18 13:10:19,166 [WARNING] src.classifier — Tentative 2/3 échouée pour R20260323003#SAVF-57724-260001 (Unable to locate credentials). Retry dans 4s.
+2026-04-18 13:10:28,914 [ERROR] src.classifier — Toutes les tentatives épuisées pour R20260323003#SAVF-57724-260001 : Unable to locate credentials
+2026-04-18 13:10:28,916 [WARNING] src.classifier — Tentative 1/3 échouée pour R20260323004#SAVF-51008-260016 (Unable to locate credentials). Retry dans 2s.
+2026-04-18 13:10:30,918 [WARNING] src.classifier — Tentative 2/3 échouée pour R20260323004#SAVF-51008-260016 (Unable to locate credentials). Retry dans 4s.
+2026-04-18 13:10:34,919 [ERROR] src.classifier — Toutes les tentatives épuisées pour R20260323004#SAVF-51008-260016 : Unable to locate credentials
+2026-04-18 13:10:34,920 [WARNING] src.classifier — Tentative 1/3 échouée pour R20260323005#SAVF-48278-260008 (Unable to locate credentials). Retry dans 2s.
+2026-04-18 13:10:36,922 [WARNING] src.classifier — Tentative 2/3 échouée pour R20260323005#SAVF-48278-260008 (Unable to locate credentials). Retry dans 4s.
+2026-04-18 13:10:40,924 [ERROR] src.classifier — Toutes les tentatives épuisées pour R20260323005#SAVF-48278-260008 : Unable to locate credentials
+2026-04-18 13:10:40,928 [WARNING] src.classifier — Tentative 1/3 échouée pour R20260323006#SAVF-60635-260001 (Unable to locate credentials). Retry dans 2s.
+2026-04-18 13:10:42,931 [WARNING] src.classifier — Tentative 2/3 échouée pour R20260323006#SAVF-60635-260001 (Unable to locate credentials). Retry dans 4s.
+2026-04-18 13:10:46,933 [ERROR] src.classifier — Toutes les tentatives épuisées pour R20260323006#SAVF-60635-260001 : Unable to locate credentials
+2026-04-18 13:10:46,933 [WARNING] src.classifier — Tentative 1/3 échouée pour R20260323007#SAVF-50577-260010 (Unable to locate credentials). Retry dans 2s.
+2026-04-18 13:10:48,935 [WARNING] src.classifier — Tentative 2/3 échouée pour R20260323007#SAVF-50577-260010 (Unable to locate credentials). Retry dans 4s.

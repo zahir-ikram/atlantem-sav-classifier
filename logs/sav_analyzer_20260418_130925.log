@@ -1,0 +1,4 @@
+2026-04-18 13:09:25,439 [INFO] __main__ — Journal initialisé : logs\sav_analyzer_20260418_130925.log
+2026-04-18 13:09:25,440 [INFO] __main__ — Démarrage — semaines=['13'], modèle=us.anthropic.claude-sonnet-4-6, région=eu-west-1
+2026-04-18 13:09:26,204 [INFO] src.classifier — SAVClassifier initialisé — modèle : us.anthropic.claude-sonnet-4-6, région : eu-west-1
+2026-04-18 13:09:26,205 [INFO] src.data_loader — Chargement week13 : Reclamations_Digit_20260323-20260327.xlsx
