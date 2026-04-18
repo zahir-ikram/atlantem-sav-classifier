@@ -1,15 +1,11 @@
 """
-data_loader.py — Chargement des réclamations SAV depuis les fichiers week11 et week13.
+data_loader.py — Chargement des réclamations SAV depuis les fichiers Excel unifiés.
 
-Week11 :
-  - CustomerComplaints_Week11.CSV  → réclamations (séparateur ;, encodage Latin-1)
-  - FilesLinkingTable_Week11.CSV   → mapping identifiant → fichiers joints
-
-Week13 :
-  - Reclamations_Digit_20260323-20260327.xlsx → deux tableaux côte à côte :
-      colonnes 1-8  : réclamation brute
-      colonnes 10-14: labels de référence (Type de litige, Responsabilité, Solution, Précision produit)
-  - Lien_Reclamation_PJ_20260323-20260327.CSV → mapping identifiant → fichiers joints
+Format des fichiers Excel :
+- Colonnes : identifiant, codeClient, typeProduit, numCdeOrigine, reperesConcernes, 
+             description, souhait, numeroLigne, Images, [Type de litige, Responsabilité, 
+             Solution, Précision produit] (seulement pour week13)
+- Colonne "Images" : liste de fichiers séparés par des points-virgules
 """
 
 from __future__ import annotations
@@ -50,6 +46,17 @@ class Claim:
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _parse_images_column(images_str: str) -> list[str]:
+    """
+    Parse la colonne Images qui contient des noms de fichiers séparés par des points-virgules.
+    Ex: "80c3ca5a051a59f95555441c44cfeca2.jpg;972c93ae9a148ac91ef0f1f4cde1a7b8.jpg"
+    """
+    if not images_str or str(images_str).lower() == "nan":
+        return []
+    # Split par point-virgule et nettoyer les espaces
+    return [f.strip() for f in str(images_str).split(";") if f.strip()]
+
+
 def _detect_encoding(path: Path) -> str:
     """Détecte l'encodage d'un fichier texte via chardet."""
     raw = path.read_bytes()
@@ -70,62 +77,31 @@ def _read_csv_auto(path: Path, sep: str = ";") -> pd.DataFrame:
         return pd.read_csv(path, sep=sep, encoding="latin-1", dtype=str)
 
 
-def _build_attachment_map(linking_path: Path) -> dict[str, list[str]]:
-    """
-    Construit un dict {identifiant_reclamation: [fichier1, fichier2, ...]}
-    depuis un fichier de liaison (colonnes Reference;Fichier).
-
-    La colonne Reference contient des valeurs de la forme :
-        R20260309002#SAVF-48278-260007
-    On extrait la partie avant le '#' comme identifiant de réclamation.
-    """
-    df = _read_csv_auto(linking_path)
-    mapping: dict[str, list[str]] = {}
-
-    if "Reference" not in df.columns or "Fichier" not in df.columns:
-        logger.warning("Colonnes Reference/Fichier introuvables dans %s", linking_path.name)
-        return mapping
-
-    for _, row in df.iterrows():
-        ref = str(row["Reference"]).strip()
-        fichier = str(row["Fichier"]).strip()
-        # L'identifiant de réclamation est la partie avant '#'
-        claim_id = ref.split("#")[0] if "#" in ref else ref
-        mapping.setdefault(claim_id, []).append(fichier)
-
-    return mapping
-
-
 # ---------------------------------------------------------------------------
 # Week 11
 # ---------------------------------------------------------------------------
 
-def load_week11(
-    complaints_path: Path,
-    linking_path: Path,
-) -> list[Claim]:
+def load_week11(excel_path: Path) -> list[Claim]:
     """
-    Charge les réclamations de la semaine 11.
+    Charge les réclamations de la semaine 11 depuis le fichier Excel unifié.
 
     Args:
-        complaints_path: Chemin vers CustomerComplaints_Week11.CSV
-        linking_path:    Chemin vers FilesLinkingTable_Week11.CSV
+        excel_path: Chemin vers data_test.xlsx (Week 11)
 
     Returns:
         Liste de :class:`Claim` avec les pièces jointes résolues.
     """
-    logger.info("Chargement week11 : %s", complaints_path.name)
-    df = _read_csv_auto(complaints_path)
+    logger.info("Chargement week11 : %s", str(excel_path))
+    df = pd.read_excel(excel_path, dtype=str)
 
     # Colonnes attendues
     expected = {"identifiant", "codeClient", "typeProduit",
                 "numCdeOrigine", "reperesConcernes", "description",
-                "souhait", "numeroLigne"}
+                "souhait", "numeroLigne", "Images"}
     missing_cols = expected - set(df.columns)
     if missing_cols:
-        raise ValueError(f"Colonnes manquantes dans {complaints_path.name} : {missing_cols}")
+        raise ValueError(f"Colonnes manquantes dans {excel_path.name} : {missing_cols}")
 
-    attachment_map = _build_attachment_map(linking_path)
     claims: list[Claim] = []
 
     for idx, row in df.iterrows():
@@ -136,8 +112,9 @@ def load_week11(
             logger.warning("Ligne %d ignorée (description vide) : %s", idx, claim_id)
             continue
 
-        # L'identifiant de réclamation dans la table de liaison est la partie avant '#'
-        short_id = claim_id.split("#")[0] if "#" in claim_id else claim_id
+        # Parse la colonne Images (points-virgules)
+        images_str = str(row.get("Images", "")).strip()
+        attachments = _parse_images_column(images_str)
 
         claims.append(Claim(
             id=claim_id,
@@ -148,7 +125,7 @@ def load_week11(
             description=description,
             souhait=str(row.get("souhait", "")).strip(),
             numero_ligne=str(row.get("numeroLigne", "")).strip(),
-            attachments=attachment_map.get(short_id, []),
+            attachments=attachments,
         ))
 
     logger.info("Week11 : %d réclamations chargées", len(claims))
@@ -159,61 +136,34 @@ def load_week11(
 # Week 13
 # ---------------------------------------------------------------------------
 
-def load_week13(
-    excel_path: Path,
-    linking_path: Path,
-) -> list[Claim]:
+def load_week13(excel_path: Path) -> list[Claim]:
     """
-    Charge les réclamations de la semaine 13 depuis le fichier Excel.
+    Charge les réclamations de la semaine 13 depuis le fichier Excel unifié.
 
-    Le fichier contient deux tableaux côte à côte (header sur la ligne 1, index 0-based) :
-      - Colonnes B-I  (index 1-8)  : données de réclamation
-      - Colonnes K-O  (index 10-14): labels de référence
+    Le fichier contient les labels de référence directement dans les colonnes :
+    Type de litige, Responsabilité, Solution, Précision produit
 
     Args:
-        excel_path:   Chemin vers Reclamations_Digit_20260323-20260327.xlsx
-        linking_path: Chemin vers Lien_Reclamation_PJ_20260323-20260327.CSV
+        excel_path: Chemin vers data_train.xlsx (Week 13)
 
     Returns:
         Liste de :class:`Claim` avec labels de référence et pièces jointes.
     """
-    logger.info("Chargement week13 : %s", excel_path.name)
+    logger.info("Chargement week13 : %s", str(excel_path))
+    df = pd.read_excel(excel_path, dtype=str)
 
-    # Lire sans header — la ligne 1 (index 1) contient les vrais noms de colonnes
-    raw = pd.read_excel(excel_path, header=None, dtype=str)
+    # Colonnes attendues
+    expected = {"identifiant", "codeClient", "typeProduit",
+                "numCdeOrigine", "reperesConcernes", "description",
+                "souhait", "numeroLigne", "Images",
+                "Type de litige", "Responsabilité", "Solution", "Précision produit"}
+    missing_cols = expected - set(df.columns)
+    if missing_cols:
+        raise ValueError(f"Colonnes manquantes dans {excel_path.name} : {missing_cols}")
 
-    # Ligne 1 = noms de colonnes pour les deux tableaux
-    header_row = raw.iloc[1].tolist()
-
-    # Tableau réclamation : colonnes 1-8
-    claim_cols = header_row[1:9]   # identifiant, codeClient, typeProduit, ...
-    df_claims = raw.iloc[2:, 1:9].copy()
-    df_claims.columns = claim_cols
-    df_claims = df_claims.reset_index(drop=True)
-
-    # Tableau labels : colonnes 10-14
-    label_cols = header_row[10:15]  # identifiant, Type de litige, Responsabilité, Solution, Précision produit
-    df_labels = raw.iloc[2:, 10:15].copy()
-    df_labels.columns = label_cols
-    df_labels = df_labels.reset_index(drop=True)
-
-    # Construire un dict {identifiant: labels} depuis le tableau de droite
-    label_map: dict[str, dict] = {}
-    id_col_label = label_cols[0]  # "identifiant"
-    for _, row in df_labels.iterrows():
-        lid = str(row.get(id_col_label, "")).strip()
-        if lid and lid.lower() != "nan":
-            label_map[lid] = {
-                "type_litige":       str(row.get("Type de litige", "")).strip(),
-                "responsabilite":    str(row.get("Responsabilité", "")).strip(),
-                "solution":          str(row.get("Solution", "")).strip(),
-                "precision_produit": str(row.get("Précision produit", "")).strip(),
-            }
-
-    attachment_map = _build_attachment_map(linking_path)
     claims: list[Claim] = []
 
-    for idx, row in df_claims.iterrows():
+    for idx, row in df.iterrows():
         claim_id = str(row.get("identifiant", "")).strip()
         description = str(row.get("description", "")).strip()
 
@@ -223,8 +173,9 @@ def load_week13(
             logger.warning("Ligne %d ignorée (description vide) : %s", idx, claim_id)
             continue
 
-        short_id = claim_id.split("#")[0] if "#" in claim_id else claim_id
-        labels = label_map.get(claim_id, {})
+        # Parse la colonne Images (points-virgules)
+        images_str = str(row.get("Images", "")).strip()
+        attachments = _parse_images_column(images_str)
 
         claims.append(Claim(
             id=claim_id,
@@ -235,11 +186,11 @@ def load_week13(
             description=description,
             souhait=str(row.get("souhait", "")).strip(),
             numero_ligne=str(row.get("numeroLigne", "")).strip(),
-            attachments=attachment_map.get(short_id, []),
-            ref_type_litige=labels.get("type_litige", ""),
-            ref_responsabilite=labels.get("responsabilite", ""),
-            ref_solution=labels.get("solution", ""),
-            ref_precision_produit=labels.get("precision_produit", ""),
+            attachments=attachments,
+            ref_type_litige=str(row.get("Type de litige", "")).strip(),
+            ref_responsabilite=str(row.get("Responsabilité", "")).strip(),
+            ref_solution=str(row.get("Solution", "")).strip(),
+            ref_precision_produit=str(row.get("Précision produit", "")).strip(),
         ))
 
     logger.info("Week13 : %d réclamations chargées", len(claims))

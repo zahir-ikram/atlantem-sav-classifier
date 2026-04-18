@@ -33,10 +33,8 @@ st.set_page_config(
 DATA_DIR        = Path("data")
 ATTACHMENTS_DIR = DATA_DIR / "attachments"
 
-WEEK11_COMPLAINTS = DATA_DIR / "week11" / "CustomerComplaints_Week11.CSV"
-WEEK11_LINKING    = DATA_DIR / "week11" / "FilesLinkingTable_Week11.CSV"
-WEEK13_EXCEL      = DATA_DIR / "week13" / "Reclamations_Digit_20260323-20260327.xlsx"
-WEEK13_LINKING    = DATA_DIR / "week13" / "Lien_Reclamation_PJ_20260323-20260327.CSV"
+WEEK11_EXCEL = DATA_DIR / "week11" / "data_test.xlsx"
+WEEK13_EXCEL = DATA_DIR / "week13" / "data_train.xlsx"
 
 # ---------------------------------------------------------------------------
 # Chargement des données (mis en cache)
@@ -46,27 +44,28 @@ WEEK13_LINKING    = DATA_DIR / "week13" / "Lien_Reclamation_PJ_20260323-20260327
 def load_all_claims() -> list:
     """Charge toutes les réclamations (Week 11 + Week 13) et les trie chronologiquement."""
     from src.data_loader import load_week11, load_week13
-    from datetime import datetime
-    import re
     
     # Charger les deux semaines
-    claims_w11 = load_week11(WEEK11_COMPLAINTS, WEEK11_LINKING)
-    claims_w13 = load_week13(WEEK13_EXCEL, WEEK13_LINKING)
+    claims_w11 = load_week11(WEEK11_EXCEL)
+    claims_w13 = load_week13(WEEK13_EXCEL)
     all_claims = claims_w11 + claims_w13
     
     def extract_date_from_id(claim_id: str) -> tuple:
         """Extrait date et index depuis l'ID (ex: R20260323001 -> (2026-03-23, 1))"""
+        import re
         match = re.match(r'R(\d{8})(\d{3})', claim_id)
         if match:
             date_str, index_str = match.groups()
             try:
                 # Format YYYYMMDD -> datetime
+                from datetime import datetime
                 date = datetime.strptime(date_str, '%Y%m%d')
                 index = int(index_str)
                 return (date, index)
             except ValueError:
                 pass
         # Fallback : date très ancienne pour les IDs non conformes
+        from datetime import datetime
         return (datetime(1900, 1, 1), 0)
     
     # Trier par date puis par index (plus ancien au plus récent)
@@ -166,14 +165,13 @@ with st.sidebar:
 
     # Selectbox : affiche date + ID + type produit
     def format_claim_option(claim):
-        from datetime import datetime
-        import re
-        
         # Extraire la date depuis l'ID
+        import re
         match = re.match(r'R(\d{8})(\d{3})', claim.id)
         if match:
             date_str = match.groups()[0]
             try:
+                from datetime import datetime
                 date = datetime.strptime(date_str, '%Y%m%d')
                 date_formatted = date.strftime('%d/%m/%Y')
                 return f"{date_formatted} • {claim.id} • {claim.type_produit}"
